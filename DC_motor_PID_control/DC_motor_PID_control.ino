@@ -10,12 +10,12 @@ long prev_count;
 long prev_millis;
 int m2;
 int error;
-int set_point = 300;
+int set_point = 1200;
 int prev_error;
 int integral;
 int drevative;
 int speed_reading;
-double Kp = 0.16; //0.16
+double Kp = 0.4; //0.16
 double ki = 0.03;
 double actuation_signal;
 
@@ -58,7 +58,7 @@ void loop()
     set_point = Serial.parseInt();
     Serial.print("Setpoint: ");
     Serial.println(set_point);
-    integral = 0;
+    //integral = 0;
   }
 
   if (millis() - prev_millis > 100)
@@ -86,10 +86,9 @@ void loop()
     else if (actuation_signal < 0)
     {
       actuation_signal = abs(actuation_signal);
-      analogWrite(motorN3, (int(actuation_signal) < 255) ? int(actuation_signal) : 255);
-      digitalWrite(motorN4, LOW);
+      analogWrite(motorN4, (int(actuation_signal) < 255) ? int(actuation_signal) : 255);
+      digitalWrite(motorN3, LOW);
     }
-
     else
     {
       digitalWrite(motorN3, LOW);
