@@ -8,9 +8,9 @@ const byte motorN4 = 10;
 volatile long cntr;
 long prev_count;
 long prev_millis;
-int m2;
+long mil2;
 int error;
-int set_point = 1200;
+int set_point = 100;
 int prev_error;
 int integral;
 int drevative;
@@ -70,7 +70,6 @@ void loop()
 
     error = set_point - speed_reading;
     integral += error;
-    //prev_error = error;
 
     //dervative = prev_error - error;
 
@@ -94,6 +93,14 @@ void loop()
       digitalWrite(motorN3, LOW);
       digitalWrite(motorN4, LOW);
     }
+  }
+
+  if (millis() - mil2 > 5000)
+  {
+    mil2 = millis();
+    set_point +=100;
+    if (set_point==1000)
+      set_point = 100;
   }
 }
 
