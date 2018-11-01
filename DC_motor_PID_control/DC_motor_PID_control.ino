@@ -13,10 +13,11 @@ int error;
 int set_point = 100;
 int prev_error;
 int integral;
-int drevative;
+int derivative;
 int speed_reading;
-double Kp = 0.4; //0.16
+double Kp = 0.3; //0.4
 double ki = 0.03;
+double kd = 0.01;
 double actuation_signal;
 
 void encoderA_ISR()
@@ -71,9 +72,9 @@ void loop()
     error = set_point - speed_reading;
     integral += error;
 
-    //dervative = prev_error - error;
+    derivative = (prev_error - error);
 
-    actuation_signal = (Kp * error) + (ki * integral);// + (kd * dervative);
+    actuation_signal = (Kp * error) + (ki * integral) + (kd * derivative);
     //Serial.print("actuation signal: ");
     //Serial.println(actuation_signal);
 
@@ -98,8 +99,8 @@ void loop()
   if (millis() - mil2 > 5000)
   {
     mil2 = millis();
-    set_point +=100;
-    if (set_point==1000)
+    set_point += 100;
+    if (set_point == 1000)
       set_point = 100;
   }
 }
