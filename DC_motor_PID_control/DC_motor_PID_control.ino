@@ -10,13 +10,13 @@ long prev_count;
 long prev_millis;
 long mil2;
 int error;
-int set_point = 100;
+int set_point = 50;
 int prev_error;
-int integral;
+double integral;
 int derivative;
 int speed_reading;
-double Kp = 0.3; //0.4
-double ki = 0.03;
+double Kp = 2.1; //0.4
+double ki = 4;//1.2
 double kd = 0.01;
 double actuation_signal;
 
@@ -41,7 +41,7 @@ void setup()
 {
   Serial.begin(115200);
 
-  delay(1500);
+  //delay(1500);
 
   pinMode(motorN3, OUTPUT);
   pinMode(motorN4, OUTPUT);
@@ -62,23 +62,24 @@ void loop()
     //integral = 0;
   }
 
-  if (millis() - prev_millis > 100)
+  if (millis() - prev_millis > 20)
   {
     prev_millis = millis();
-    speed_reading = prev_count - cntr;
+    
+    speed_reading = ((prev_count - cntr) / 0.02) / 34.02; //motor shaft RPM
     Serial.println(speed_reading);
     prev_count = cntr;
 
     error = set_point - speed_reading;
-    integral += error;
-
-    derivative = (prev_error - error);
-
+    
+    integral += (error) * 0.02;
+    derivative = (error - prev_error) / 0.02;
     actuation_signal = (Kp * error) + (ki * integral) + (kd * derivative);
+    
+    prev_error = error;
     //Serial.print("actuation signal: ");
     //Serial.println(actuation_signal);
-
-    if (actuation_signal > 0)
+   if (actuation_signal > 0)
     {
       analogWrite(motorN3, (int(actuation_signal) < 255) ? int(actuation_signal) : 255);
       digitalWrite(motorN4, LOW);
@@ -96,11 +97,19 @@ void loop()
     }
   }
 
+  //digitalWrite(motorN3, LOW);
+  //digitalWrite(motorN4, HIGH);
+  
+  /*if(millis() - mil2 > 100)
+  {
+    mil2 = millis();
+    Serial.println(speed_reading);
+  }*/
   if (millis() - mil2 > 5000)
   {
     mil2 = millis();
-    set_point += 100;
-    if (set_point == 1000)
+    set_point += 25;
+    if (set_point > 300)
       set_point = 100;
   }
 }
