@@ -1,47 +1,56 @@
+/*Circuit connections:
+-Motor red   --> OUT1 H-bridge
+-Motor white --> OUT1 H-bridge
+-Motor blue  --> 3.3V (encoder power)
+-Motor black --> GND (encoder power)
+-Motor yellow --> Arduino D2 (encoder phase A)
+-Motor green  --> Arduino D3 (encoder phase B)
+-H-bridge IN1 --> Arduino D10
+-H-bridge IN2 --> Arduino D19*/
+
 const byte encoderPinA = 2;
 const byte encoderPinB = 3;
 
 const byte motorN3 = 9;
 const byte motorN4 = 10;
 
+volatile long pulse_count;
+long prev_pulse_count;
 
-volatile long cntr;
-long prev_count;
 long prev_millis;
 long mil2;
-int error;
+
 int set_point = 50;
-int prev_error;
-double integral;
-int derivative;
-int speed_reading;
-double Kp = 2.1; //0.4
-double ki = 4;//1.2
+double Kp = 1.6; //2.1
+double ki = 5; //4
 double kd = 0.01;
-double actuation_signal;
+double error;
+double prev_error;
+double integral;
+double derivative;
+double speed_reading;
+int actuation_signal;
 
 void encoderA_ISR()
 {
 
   if (digitalRead(encoderPinA) == HIGH)
-    (digitalRead(encoderPinB) == LOW) ? cntr++ : cntr--;
+    (digitalRead(encoderPinB) == LOW) ? pulse_count++ : pulse_count--;
   else
-    (digitalRead(encoderPinB) == HIGH) ? cntr++ : cntr--;
+    (digitalRead(encoderPinB) == HIGH) ? pulse_count++ : pulse_count--;
 }
 
 void encoderB_ISR()
 {
   if (digitalRead(encoderPinB) == HIGH)
-    (digitalRead(encoderPinA) == HIGH) ? cntr++ : cntr--;
+    (digitalRead(encoderPinA) == HIGH) ? pulse_count++ : pulse_count--;
   else
-    (digitalRead(encoderPinA) == LOW) ? cntr++ : cntr--;
+    (digitalRead(encoderPinA) == LOW) ? pulse_count++ : pulse_count--;
 }
 
 void setup()
 {
   Serial.begin(115200);
-
-  //delay(1500);
 
   pinMode(motorN3, OUTPUT);
   pinMode(motorN4, OUTPUT);
@@ -65,29 +74,28 @@ void loop()
   if (millis() - prev_millis > 20)
   {
     prev_millis = millis();
-    
-    speed_reading = ((prev_count - cntr) / 0.02) / 34.02; //motor shaft RPM
+
+    speed_reading = ((prev_pulse_count - pulse_count) / 0.02) / 34.02; //motor shaft RPM
     Serial.println(speed_reading);
-    prev_count = cntr;
+    prev_pulse_count = pulse_count;
 
     error = set_point - speed_reading;
-    
+
     integral += (error) * 0.02;
     derivative = (error - prev_error) / 0.02;
     actuation_signal = (Kp * error) + (ki * integral) + (kd * derivative);
-    
+
     prev_error = error;
-    //Serial.print("actuation signal: ");
-    //Serial.println(actuation_signal);
-   if (actuation_signal > 0)
+
+    if (actuation_signal > 0)
     {
-      analogWrite(motorN3, (int(actuation_signal) < 255) ? int(actuation_signal) : 255);
+      analogWrite(motorN3, (actuation_signal < 255) ? actuation_signal : 255);
       digitalWrite(motorN4, LOW);
     }
     else if (actuation_signal < 0)
     {
       actuation_signal = abs(actuation_signal);
-      analogWrite(motorN4, (int(actuation_signal) < 255) ? int(actuation_signal) : 255);
+      analogWrite(motorN4, (actuation_signal < 255) ? actuation_signal : 255);
       digitalWrite(motorN3, LOW);
     }
     else
@@ -96,22 +104,19 @@ void loop()
       digitalWrite(motorN4, LOW);
     }
   }
-
   //digitalWrite(motorN3, LOW);
   //digitalWrite(motorN4, HIGH);
-  
-  /*if(millis() - mil2 > 100)
-  {
+
+  /*if (millis() - mil2 > 100)
+    {
     mil2 = millis();
     Serial.println(speed_reading);
-  }*/
-  if (millis() - mil2 > 5000)
-  {
+    }*/
+    if (millis() - mil2 > 5000)
+    {
     mil2 = millis();
     set_point += 25;
     if (set_point > 300)
       set_point = 100;
-  }
+    }
 }
-
-
