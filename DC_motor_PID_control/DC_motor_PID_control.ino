@@ -1,12 +1,12 @@
 /*Circuit connections:
 -Motor red   --> OUT1 H-bridge
--Motor white --> OUT1 H-bridge
+-Motor white --> OUT2 H-bridge
 -Motor blue  --> 3.3V (encoder power)
 -Motor black --> GND (encoder power)
 -Motor yellow --> Arduino D2 (encoder phase A)
 -Motor green  --> Arduino D3 (encoder phase B)
 -H-bridge IN1 --> Arduino D10
--H-bridge IN2 --> Arduino D19*/
+-H-bridge IN2 --> Arduino D9*/
 
 const byte encoderPinA = 2;
 const byte encoderPinB = 3;
